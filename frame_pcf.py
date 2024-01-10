@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
 import json
+import os
 import time
 def resetarCoresBotoes(janela):
     for widget_pai in janela.winfo_children():
@@ -61,7 +62,8 @@ class Pcf(customtkinter.CTkFrame):
                         userbox_novo_frame = customtkinter.CTkFrame(user_frame, fg_color='transparent',width=950)
                         userbox_novo_frame.pack()
                         default_frame = userbox_novo_frame
-                    my_image = customtkinter.CTkImage(light_image=Image.open("Sistema/Img/users/"+usuario_carregados[i]["Imagem"]),dark_image=Image.open("Sistema/Img/users/"+usuario_carregados[i]["Imagem"]),size=(90, 90))
+                    caminho_imagem = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Sistema', 'Img', 'users', usuario_carregados[i]["Imagem"])
+                    my_image = customtkinter.CTkImage(light_image=Image.open(caminho_imagem), dark_image=Image.open(caminho_imagem), size=(90, 90))
                     button_user = customtkinter.CTkButton(default_frame, image=my_image, compound="top", text=usuario_carregados[i]["Nome"].split(" ")[0],font=("Helvetica", 18, "bold"), fg_color='white',hover_color="#C9F1FF", text_color='black')
                     button_user.configure(command=lambda arg1=usuario_carregados[i]["Registro"], arg2=button_user, arg3=userbox_frame: mudarPessoa(arg1, arg2, arg3))
                     button_user.pack(side='left', padx=8, pady=5)
