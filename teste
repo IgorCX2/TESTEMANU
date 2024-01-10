@@ -1,1 +1,1 @@
-\
+pyinstaller --onefile --add-data "Sistema/Img;Sistema/Img" --add-data "Sistema/Bd;Sistema/Bd" app.py
