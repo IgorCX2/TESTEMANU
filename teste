@@ -1,1 +1,13 @@
-pyinstaller --onefile --add-data "Sistema/Img;Sistema/Img" --add-data "Sistema/Bd;Sistema/Bd" app.py
+pyinstaller --onefile --add-data "Sistema/Img;Sistema/Img" --add-data "Sistema/Bd;Sistema/Bd" --add-data "Sistema/Drive;Sistema/Drive"  app.py
+
+
+        diretorio_atual = os.path.dirname(os.path.abspath(__file__))
+        caminho_do_webdriver = os.path.join(diretorio_atual, 'Sistema', 'Drive', 'chromedriver.exe')
+        
+        # Configurar o serviço do WebDriver usando o caminho do executável
+        servico = webdriver.chrome.service.Service(caminho_do_webdriver)
+
+        # Criar uma instância do navegador Chrome usando o serviço configurado
+        navegador = webdriver.Chrome(service=servico)
+
+import os
