@@ -1,6 +1,6 @@
 from datetime import datetime
 import json
-
+import os
 
 def obter_turno_atual(): #Para pegar o turno Atual
     hora_atual = datetime.now().time()
@@ -22,15 +22,20 @@ def obter_turno_atual(): #Para pegar o turno Atual
     else:
         return 3
     
-def carregar_usuarios(): # Carrega a matriz
-    with open("Sistema/Bd/equipe/equipeDados.json", "r") as arquivo:
+def carregar_usuarios():
+    caminho_arquivo = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Sistema', 'Bd', 'equipe', 'equipeDados.json')
+    
+    with open(caminho_arquivo, 'r') as arquivo:
         usuarios = json.load(arquivo)
-        return usuarios
+    
+    return usuarios
 
-def carregar_maquina(): # Carrega a matriz
-    with open("Sistema/Bd/maquina.json", "r") as arquivo:
+def carregar_maquina():
+    caminho_arquivo = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Sistema', 'Bd', 'maquina.json')
+    with open(caminho_arquivo, 'r') as arquivo:
         maquina = json.load(arquivo)
-        return maquina
+    
+    return maquina
     
 def buscar_maquina_nome(maquina, dados):
     for maquinaListagem in dados:
