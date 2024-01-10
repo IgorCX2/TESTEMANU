@@ -12,6 +12,7 @@ from datetime import datetime
 import json
 import os
 import time
+
 def resetarCoresBotoes(janela):
     for widget_pai in janela.winfo_children():
         for widget in widget_pai.winfo_children():
