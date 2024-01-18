@@ -2,6 +2,7 @@ import customtkinter
 from frame_descanso import Descanso
 from frame_home import Home
 from frame_pcf import Pcf
+from frame_carregando import Carregando
 from app_functions import *
 from frame_menu import Menu
 class Aplicativo(customtkinter.CTk):
@@ -11,6 +12,7 @@ class Aplicativo(customtkinter.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.pagina_ativa = None
         self.tempo_inativo = 0
+        self.statusPFC = "Nada"
         self.temporizador_contador = 0
         self.bind("<Motion>", lambda event: reiniciar_temporizador(self, event))
 
@@ -39,7 +41,9 @@ class Aplicativo(customtkinter.CTk):
             case "descanso":
                 self.page_name = Descanso(self.pages_container)
             case "pcf":
-                self.page_name = Pcf(self.pages_container, cod)
+                self.page_name = Pcf(self.pages_container, self.navigate_to_page, cod)
+            case "carregando":
+                self.page_name = Carregando(self.pages_container)
             case _:
                 self.page_name = Descanso(self.pages_container)
             
