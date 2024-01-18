@@ -17,17 +17,10 @@ import os
 from threading import Thread
 from datetime import datetime
 import pyautogui
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-import win32print
-import win32api
-import wx
-import subprocess
 import tempfile
 import os
-import subprocess
-from weasyprint import HTML
-
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 def reiniciar_temporizador(app, event):
     app.tempo_inativo = time.time()
 
@@ -261,8 +254,6 @@ def salvar_html_temporario(html_content):
 
 def acessar_pcFactory():
     print("ACESSAR API")
-
-    print("Trabalho de impressão enviado com sucesso.")
     maquinaLista = carregar_maquina()
     url = "http://10.36.216.25:9095/maps/v1"
     response = requests.get(url)
@@ -638,14 +629,12 @@ def abrirChamado(app, resultados):
                 #impressora_padrao = win32print.GetDefaultPrinter()
                 #teste = r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
                 #subprocess.run([teste, "/t", file_path, "Lexmark MS415dn"], shell=True)
-                #navegador.get(temp_file_path)
-                #time.sleep(1)
-                #pyautogui.leftClick(x=120,y=120)
-                #time.sleep(1)
-                #pyautogui.hotkey('ctrl', 'p')
-                #time.sleep(3)
-                #pyautogui.press('enter')
-                #time.sleep(2)
+                time.sleep(1)
+                pyautogui.leftClick(x=120,y=120)
+                pyautogui.hotkey('ctrl', 'p')
+                time.sleep(3)
+                pyautogui.press('enter')
+                time.sleep(2)
                 
             for i in range(len(statusSalvar)):
                 print("letsGo")
