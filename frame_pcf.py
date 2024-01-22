@@ -1,17 +1,18 @@
 import customtkinter
+import tkinter as tk
+from tkinter import messagebox
 from functions_share import mostrar_usuarios, buscar_pessoa_registro, carregar_maquina, buscar_maquina_nome
 from PIL import Image
 from globals import nomeSelecionado
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from datetime import datetime
-import json
 import os
 import time
+import tkinter as tk
+from threading import Thread
+from selenium.webdriver.chrome.options import Options
 
 def resetarCoresBotoes(janela):
     for widget_pai in janela.winfo_children():
@@ -24,8 +25,22 @@ def mudarPessoa(pessoa, janela, frame_1):
     nomeSelecionado = pessoa
     resetarCoresBotoes(frame_1)
     janela.configure(fg_color="blue")
+
+class ToplevelWindow(customtkinter.CTkToplevel):#Desativado
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.geometry("600x150")
+        self.attributes('-topmost', True)
+        self.label = customtkinter.CTkLabel(self, text="..CARREGANDO..",font=("Arial Black", 50, "bold"))
+        self.label.pack(padx=20, pady=20)
+        self.progressbar = customtkinter.CTkProgressBar(self, orientation="horizontal", width=500)
+        self.progressbar.pack()
+        self.progressbar.configure(mode="indeterminnate")
+        self.progressbar.start()
+
+
 class Pcf(customtkinter.CTkFrame):
-    def __init__(self, master, cod=None):
+    def __init__(self, master, navigate_to_page, cod=None):
         self.maquinaLista = carregar_maquina()
         list_pcf={
             None: "",
@@ -112,12 +127,13 @@ class Pcf(customtkinter.CTkFrame):
             
         buttonSave_frame = customtkinter.CTkFrame(frame_total, fg_color='transparent')
         buttonSave_frame.pack(pady=20)
-        button = customtkinter.CTkButton(buttonSave_frame, text="SALVAR",font=("Helvetica", 18, "bold"), fg_color='#6aa84f', text_color='black', width=850,height=40, command=lambda arg=cod:self.lancar_pcf(arg))
+        button = customtkinter.CTkButton(buttonSave_frame, text="SALVAR",font=("Helvetica", 18, "bold"), fg_color='#6aa84f', text_color='black', width=850,height=40, command=lambda arg=cod, master=master:self.lancar_pcf(arg,master))
         button.pack(side='left', padx=8, pady=8)
         button = customtkinter.CTkButton(buttonSave_frame, text="LOTTO",font=("Helvetica", 18, "bold"), command=lambda arg="Modal": self.ir_para_lotto(arg), fg_color='#1155cc', text_color='black', width=80,height=40)
         button.pack(side='left', padx=8, pady=8)
         self.erros_label = customtkinter.CTkLabel(frame_total, text="", font=("Helvetica", 20), fg_color='transparent', text_color='black')
         self.erros_label.pack(pady=5)
+        self.carregando_label = customtkinter.CTkFrame(frame_total, fg_color='transparent')
 
     def inserir_maquina(self, maquina):
         self.digt_maquina.delete(0, 'end')
@@ -135,11 +151,11 @@ class Pcf(customtkinter.CTkFrame):
                 button = customtkinter.CTkButton(self.maquinasugestao_label, text=i,font=("Helvetica", 18), command=lambda arg=i: self.inserir_maquina(arg), fg_color='#1155cc', text_color='white', width=80,height=20)
                 button.pack(padx=2, pady=3, side='left')
 
-    def lancar_pcf(self, cod):
+    def lancar_pcf(self, cod, janela):
         maquina=self.digt_maquina.get().upper()
         maquinaInfos = buscar_maquina_nome(maquina, self.maquinaLista)
         if maquinaInfos is None:
-            self.erros_label.configure(text="Maquina não encontrada")
+            self.erros_label.configure(text="Maquina não encontrada", )
             return 0
         if nomeSelecionado == "" or maquina == "" or maquina == "":
             self.erros_label.configure(text="Você deve preencher todos os campos")
@@ -148,64 +164,94 @@ class Pcf(customtkinter.CTkFrame):
         if usuario == None:
             self.erros_label.configure(text="registro informado não existe")
             return 0
-        print(usuario)
-        comentario = self.digt_comentario.get("0.0", "end")
-        if comentario =="" :
-            self.erros_label.configure(text="Você deve preencher todos os campos")
-            return 0
-        print(maquinaInfos["codigo"])
-        servico = webdriver.ChromeService()
-        navegador = webdriver.Chrome(service=servico)
-        navegador.get("http://10.36.216.25:9097") #entrar no site
-        print(usuario)
-        WebDriverWait(navegador, 120).until(
-            EC.visibility_of_element_located((By.XPATH, '//*[@id="user"]')) #escrever no login
-        ).send_keys('31231')
-        WebDriverWait(navegador, 120).until(
-            EC.visibility_of_element_located((By.XPATH, '//*[@id="password"]')) #escrever no login
-        ).send_keys('31231')
-        WebDriverWait(navegador, 120).until(
-            EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/app-authentication/div/div/div/div[2]/form/app-button[1]/button'))
-        ).click()
-        time.sleep(2)
-        navegador.get("http://10.36.216.25:9097/work-station-details/"+maquinaInfos["codigo"])
-        WebDriverWait(navegador, 120).until(
-            EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/app-home/div/main/app-work-station-details/app-grid/app-grid-layout/div/gridster/gridster-item[3]/app-dyn-component/app-list-quick-access-button/gridster/gridster-item[1]/app-quick-access-button/button'))
-        ).click()
-        if cod[1] == "4":
+        if cod == "0706":
+            sintoma = self.digt_sintoma.get("0.0", "end")
+            causa = self.digt_causa.get("0.0", "end")
+            solucao = self.digt_solucao.get("0.0", "end")
+            if solucao == "" or causa == "" or  sintoma == "":
+                self.erros_label.configure(text="Você deve preencher todos os campos")
+                return 0
+            comentario = solucao.replace('\n', '')+" | "+causa.replace('\n', '')+" | "+sintoma.replace('\n', '')
+        else:
+            comentario = self.digt_comentario.get("0.0", "end")
+            if comentario =="" :
+                self.erros_label.configure(text="Você deve preencher todos os campos")
+                return 0  
+
+        loading_window = ToplevelWindow(self)
+        thread = Thread(target=self.executar_lancar_pcf, args=(cod, maquinaInfos, comentario,usuario, loading_window))
+        thread.start()
+        
+    def executar_lancar_pcf(self, cod, maquinaInfos, comentario,usuario,loading_window):
+        try:
+            diretorio_atual = os.path.dirname(os.path.abspath(__file__))
+            caminho_do_webdriver = os.path.join(diretorio_atual, 'Sistema', 'Drives', 'chromedriver.exe')
+            chrome_options = Options()
+            chrome_options.add_argument('--headless') # Executa em segundo plano
+            caminho_do_webdriver = os.path.join(diretorio_atual, 'Sistema', 'Drives', 'chromedriver.exe')
+            servico = webdriver.chrome.service.Service(caminho_do_webdriver)
+            navegador = webdriver.Chrome(service=servico)
+            navegador.get("http://10.36.216.25:9097")
             WebDriverWait(navegador, 120).until(
-                EC.element_to_be_clickable((By.XPATH, '/html/body/ngb-modal-window/div/div/app-a0714modal/div[2]/app-a0714-resource-status/app-panel-resource-status/div/ul/li[6]'))
-            ).click()
-        if cod[1] == "7":
+                EC.visibility_of_element_located((By.XPATH, '//*[@id="user"]')) #escrever no login
+            ).send_keys('31231')
             WebDriverWait(navegador, 120).until(
-                EC.element_to_be_clickable((By.XPATH, '/html/body/ngb-modal-window/div/div/app-a0714modal/div[2]/app-a0714-resource-status/app-panel-resource-status/div/ul/li[6]'))
-            ).click()
-        if cod[1] == "5":
+                EC.visibility_of_element_located((By.XPATH, '//*[@id="password"]')) #escrever no login
+            ).send_keys('31231')
             WebDriverWait(navegador, 120).until(
-                EC.element_to_be_clickable((By.XPATH, '/html/body/ngb-modal-window/div/div/app-a0714modal/div[2]/app-a0714-resource-status/app-panel-resource-status/div/ul/li[7]'))
+                EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/app-authentication/div/div/div/div[2]/form/app-button[1]/button'))
             ).click()
-            
-        caminho_status={
-            None: "",
-            "0405": '//*[@id="ngb-nav-10-panel"]/app-list-mini-card-comment/div[2]/div[2]/div',
-            "0406": '//*[@id="ngb-nav-69-panel"]/app-list-mini-card-comment/div[2]/div[3]/div',
-            "0407": '//*[@id="ngb-nav-69-panel"]/app-list-mini-card-comment/div[2]/div[4]/div',
-            "0408": '//*[@id="ngb-nav-69-panel"]/app-list-mini-card-comment/div[2]/div[5]/div',
-            "0403": '//*[@id="ngb-nav-69-panel"]/app-list-mini-card-comment/div[2]/div[7]/div',
-            "0706": '//*[@id="ngb-nav-72-panel"]/app-list-mini-card-comment/div[2]/div[7]/div',
-            "0502": '//*[@id="ngb-nav-70-panel"]/app-list-mini-card-comment/div[2]/div[1]/div',
-            "0504": '//*[@id="ngb-nav-70-panel"]/app-list-mini-card-comment/div[2]/div[3]/div',
-            "0505": '//*[@id="ngb-nav-70-panel"]/app-list-mini-card-comment/div[2]/div[4]/div',
-            "0506": '//*[@id="ngb-nav-70-panel"]/app-list-mini-card-comment/div[2]/div[5]/div',
-            "0404": '//*[@id="ngb-nav-69-panel"]/app-list-mini-card-comment/div[2]/div[1]/div',
-            "0418": '//*[@id="ngb-nav-69-panel"]/app-list-mini-card-comment/div[2]/div[20]/div',
-        }
-        WebDriverWait(navegador, 120).until(
-            EC.element_to_be_clickable((By.XPATH, caminho_status[cod]))
-        ).click()
-        WebDriverWait(navegador, 120).until(
-            EC.visibility_of_element_located((By.XPATH, '/html/body/ngb-modal-window[2]/div/div/app-modal-status-details-comments/div[2]/div/div/textarea')) #escrever no login
-        ).send_keys(comentario)
-        WebDriverWait(navegador, 120).until(
-            EC.element_to_be_clickable((By.XPATH, '/html/body/ngb-modal-window[2]/div/div/app-modal-status-details-comments/div[3]/app-button[2]/button'))
-        ).click()
+            time.sleep(1)
+            navegador.get("http://10.36.216.25:9097/work-station-details/"+maquinaInfos["codigo"])
+            WebDriverWait(navegador, 120).until(
+                EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/app-home/div/main/app-work-station-details/app-grid/app-grid-layout/div/gridster/gridster-item[3]/app-dyn-component/app-list-quick-access-button/gridster/gridster-item[1]/app-quick-access-button/button'))
+            ).click()
+            if cod[1] == "4":
+                WebDriverWait(navegador, 120).until(
+                    EC.element_to_be_clickable((By.XPATH, '/html/body/ngb-modal-window/div/div/app-a0714modal/div[2]/app-a0714-resource-status/app-panel-resource-status/div/ul/li[6]'))
+                ).click()
+            if cod[1] == "7":
+                WebDriverWait(navegador, 120).until(
+                    EC.element_to_be_clickable((By.XPATH, '/html/body/ngb-modal-window/div/div/app-a0714modal/div[2]/app-a0714-resource-status/app-panel-resource-status/div/ul/li[9]'))
+                ).click()
+            if cod[1] == "5":
+                WebDriverWait(navegador, 120).until(
+                    EC.element_to_be_clickable((By.XPATH, '/html/body/ngb-modal-window/div/div/app-a0714modal/div[2]/app-a0714-resource-status/app-panel-resource-status/div/ul/li[7]'))
+                ).click()
+
+            caminho_status={
+                None: "",
+                "0405": '//*[@id="ngb-nav-10-panel"]/app-list-mini-card-comment/div[2]/div[2]/div',
+                "0406": '//*[@id="ngb-nav-10-panel"]/app-list-mini-card-comment/div[2]/div[3]/div',
+                "0407": '//*[@id="ngb-nav-10-panel"]/app-list-mini-card-comment/div[2]/div[4]/div',
+                "0408": '//*[@id="ngb-nav-10-panel"]/app-list-mini-card-comment/div[2]/div[5]/div',
+                "0403": '//*[@id="ngb-nav-10-panel"]/app-list-mini-card-comment/div[2]/div[7]/div',
+                "0706": '//*[@id="ngb-nav-13-panel"]/app-list-mini-card-comment/div[2]/div[7]/div',
+                "0502": '//*[@id="ngb-nav-70-panel"]/app-list-mini-card-comment/div[2]/div[1]/div',
+                "0504": '//*[@id="ngb-nav-70-panel"]/app-list-mini-card-comment/div[2]/div[3]/div',
+                "0505": '//*[@id="ngb-nav-70-panel"]/app-list-mini-card-comment/div[2]/div[4]/div',
+                "0506": '//*[@id="ngb-nav-70-panel"]/app-list-mini-card-comment/div[2]/div[5]/div',
+                "0404": '//*[@id="ngb-nav-10-panel"]/app-list-mini-card-comment/div[2]/div[1]/div',
+                "0418": '//*[@id="ngb-nav-10-panel"]/app-list-mini-card-comment/div[2]/div[20]/div',
+            }
+            time.sleep(1)
+            WebDriverWait(navegador, 120).until(
+                EC.element_to_be_clickable((By.XPATH, caminho_status[cod]))
+            ).click()
+            WebDriverWait(navegador, 120).until(
+                EC.visibility_of_element_located((By.XPATH, '/html/body/ngb-modal-window[2]/div/div/app-modal-status-details-comments/div[2]/div/div/textarea')) #escrever no login
+            ).send_keys(comentario)
+            WebDriverWait(navegador, 120).until(
+                EC.element_to_be_clickable((By.XPATH, '/html/body/ngb-modal-window[2]/div/div/app-modal-status-details-comments/div[3]/app-button[2]/button'))
+            ).click()
+        finally:
+            self.master.after(0, lambda: self.fechar_janela(loading_window))
+
+    def fechar_janela(self, window):
+        window.destroy()
+
+    def verificar_thread(self, thread, loading_window):
+        if thread.is_alive():
+            self.master.after(100, self.verificar_thread, thread, loading_window)
+        else:
+            self.fechar_janela(loading_window)
