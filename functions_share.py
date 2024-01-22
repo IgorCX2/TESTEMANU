@@ -76,4 +76,3 @@ def mostrar_usuarios(cod): #Mostra Usuario x Cargo x Turno
             if turno_selecionado[0] == 'M' and (usuario["Turno"] == "M" or str(usuario["Turno"]) == turno_selecionado[1:]) and usuario["Cargo"] != list_permit[cod] and usuario["Cargo"] != "Adm":
                 usuarios_turno.append(usuario)
     return usuarios_turno
-
